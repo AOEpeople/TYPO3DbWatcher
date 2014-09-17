@@ -6,7 +6,6 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Finder\Iterator\RecursiveDirectoryIterator;
 
 /**
  * @package Aoe\TYPO3DbWatcher\Console\Command
@@ -70,6 +69,7 @@ class TimestampCommand extends Command
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
+     * @throws \Exception
      * @return string
      */
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -81,6 +81,9 @@ class TimestampCommand extends Command
             $input->getOption('database'),
             $input->getOption('port')
         );
+        if (false === $connection) {
+            throw new \Exception(mysqli_error($connection));
+        }
         foreach ($this->getTables($connection) as $table) {
             $table = $table[0];
             foreach ($input->getOption('fields') as $field) {
