@@ -1,0 +1,17 @@
+{
+    "name": "aoe/typo3-db-watcher",
+    "description": "Check TYPO3 database tables for consistence.",
+    "license": "",
+    "config": {
+        "vendor-dir": "lib",
+        "bin-dir": "bin"
+    },
+    "require": {
+        "symfony/console": "dev-master"
+    },
+    "autoload": {
+        "psr-0": {
+            "Aoe\\TYPO3DbWatcher": "src/Classes"
+        }
+    }
+}
