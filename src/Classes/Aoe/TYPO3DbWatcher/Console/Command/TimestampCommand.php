@@ -74,16 +74,14 @@ class TimestampCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $connection = mysqli_connect(
+        $connection = $this->connect(
             $input->getOption('host'),
-            $input->getOption('user'),
-            $input->getOption('pass'),
             $input->getOption('database'),
-            $input->getOption('port')
+            $input->getOption('port'),
+            $input->getOption('user'),
+            $input->getOption('pass')
         );
-        if (false === $connection) {
-            throw new \Exception(mysqli_error($connection));
-        }
+
         foreach ($this->getTables($connection) as $table) {
             $table = $table[0];
             foreach ($input->getOption('fields') as $field) {
@@ -114,53 +112,65 @@ class TimestampCommand extends Command
     }
 
     /**
-     * @param \mysqli $mysqli
+     * @param string $host
+     * @param string $db
+     * @param integer $port
+     * @param string $user
+     * @param string $pass
+     * @return \PDO
+     */
+    private function connect($host, $db, $port, $user, $pass)
+    {
+        $dsn = 'mysql:dbname=%s;host=%s;port=%s';
+        return new \PDO(sprintf($dsn, $db, $host, $port), $user, $pass);
+    }
+
+    /**
+     * @param \PDO $connection
      * @param string $column
      * @param string $table
      * @return array
      */
-    private function getRowsWithInvalidTimestamp(\mysqli $mysqli, $column, $table)
+    private function getRowsWithInvalidTimestamp(\PDO $connection, $column, $table)
     {
-        $query = $this->buildQuery(
-            $mysqli,
-            "SELECT * FROM {$table} WHERE {$column} > UNIX_TIMESTAMP(NOW());"
-        );
-        return \mysqli_fetch_all($query, MYSQLI_ASSOC);
+        $stmt = $this->buildQuery($connection, "SELECT * FROM {$table} WHERE {$column} > UNIX_TIMESTAMP(NOW());");
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     /**
-     * @param \mysqli $mysqli
+     * @param \PDO $connection
      * @param string $column
      * @param string $table
      * @return boolean
      */
-    private function hasColumnInTable(\mysqli $mysqli, $column, $table)
+    private function hasColumnInTable(\PDO $connection, $column, $table)
     {
-        $query = $this->buildQuery($mysqli, "SHOW COLUMNS FROM {$table} LIKE '{$column}'");
-        return (\mysqli_num_rows($query)) ? true : false;
+        $stmt = $this->buildQuery($connection, "SHOW COLUMNS FROM {$table} LIKE '{$column}'");
+        return (count($stmt->fetchAll()) > 0) ? true : false;
     }
 
     /**
-     * @param \mysqli $mysqli
+     * @param \PDO $connection
      * @return object
      */
-    private function getTables(\mysqli $mysqli)
+    private function getTables(\PDO $connection)
     {
-        $tables = $this->buildQuery($mysqli, "SHOW TABLES;");
-        return \mysqli_fetch_all($tables);
+        $stmt = $this->buildQuery($connection, "SHOW TABLES;");
+        return $stmt->fetchAll(\PDO::FETCH_NUM);
     }
 
     /**
-     * @param \mysqli $mysqli
-     * @param $select
-     * @return \mysqli_result
+     * @param \PDO $connection
+     * @param string $select
+     * @return \PDOStatement
      * @throws \Exception
      */
-    private function buildQuery(\mysqli $mysqli, $select)
+    private function buildQuery(\PDO $connection, $select)
     {
-        $query = \mysqli_query($mysqli, $select);
+        $query = $connection->query($select);
         if (false === $query) {
-            throw new \Exception(mysqli_error($mysqli));
+            $errorInfo = $connection->errorInfo();
+            throw new \Exception($errorInfo[2]);
         }
         return $query;
     }
