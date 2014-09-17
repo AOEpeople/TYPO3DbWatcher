@@ -125,7 +125,7 @@ class TimestampCommand extends Command
             $mysqli,
             "SELECT * FROM {$table} WHERE {$column} > UNIX_TIMESTAMP(NOW());"
         );
-        return mysqli_fetch_all($query, MYSQLI_ASSOC);
+        return \mysqli_fetch_all($query, MYSQLI_ASSOC);
     }
 
     /**
@@ -137,7 +137,7 @@ class TimestampCommand extends Command
     private function hasColumnInTable(\mysqli $mysqli, $column, $table)
     {
         $query = $this->buildQuery($mysqli, "SHOW COLUMNS FROM {$table} LIKE '{$column}'");
-        return (mysqli_num_rows($query)) ? true : false;
+        return (\mysqli_num_rows($query)) ? true : false;
     }
 
     /**
@@ -147,7 +147,7 @@ class TimestampCommand extends Command
     private function getTables(\mysqli $mysqli)
     {
         $tables = $this->buildQuery($mysqli, "SHOW TABLES;");
-        return mysqli_fetch_all($tables);
+        return \mysqli_fetch_all($tables);
     }
 
     /**
@@ -158,7 +158,7 @@ class TimestampCommand extends Command
      */
     private function buildQuery(\mysqli $mysqli, $select)
     {
-        $query = mysqli_query($mysqli, $select);
+        $query = \mysqli_query($mysqli, $select);
         if (false === $query) {
             throw new \Exception(mysqli_error($mysqli));
         }
