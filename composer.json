@@ -7,7 +7,7 @@
         "bin-dir": "bin"
     },
     "require": {
-        "symfony/console": "dev-master"
+        "symfony/console": "2.8.*@dev"
     },
     "autoload": {
         "psr-0": {
